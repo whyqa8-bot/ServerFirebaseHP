@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -54,3 +57,17 @@ jobs:
         with:
           name: phonebase-apk
           path: ${{ steps.find.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Buat Release APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          APK="${{ steps.find.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk"
+          cp "$APK" PhoneBase.apk
+          TAG="v1.0.${{ github.run_number }}"
+          gh release create "$TAG" PhoneBase.apk \
+            --repo "${{ github.repository }}" \
+            --target "${{ github.sha }}" \
+            --title "PhoneBase $TAG" \
+            --notes "APK PhoneBase (build #${{ github.run_number }}). Unduh PhoneBase.apk di bawah ini lalu pasang di HP Android."
